@@ -1,7 +1,10 @@
 from urllib import response
 from django.shortcuts import render
+
+from events.models import Event
 from .models import Conversation, KeyWords, Phrase
 from files.models import Folder
+from events.models import Event
 import datetime
 import random
 # Create your views here.
@@ -105,6 +108,46 @@ def quesOrAns(response):
     else:
         return True
 
+def convertDate(date):
+    newDate = ""
+    count =len(date)-1
+    while(count>=0):
+        if(date[count] == "/"):
+            newDate += "-"    
+        else:
+            newDate += date[count]
+        count-=1
+    return newDate
+
+def returnName(response):
+    wordArray = wordToArr(response)
+    if(wordArray[1].lower() == 'event'):
+        ind = wordArray.index("on")
+        nameArray = wordArray[2:ind]
+        name = ArrtoWord(nameArray)
+        return name
+
+def returnTitle(response):
+    wordArray = wordToArr(response)
+    if(wordArray[2].lower() == 'event'):
+        ind = wordArray.index("note")
+        nameArray = wordArray[3:ind]
+        name = ArrtoWord(nameArray)
+        return name    
+
+def returnDate(response):
+    wordArray = wordToArr(response)
+    ind = wordArray.index("on")
+    return wordArray[ind+1]
+
+def returnNote(response):
+    wordArray = wordToArr(response)
+    if(wordArray[2].lower() == 'event'):
+        ind = wordArray.index("note")
+        nameArray = wordArray[ind+1:len(wordArray)]
+        name = ArrtoWord(nameArray)
+        return name    
+
 def compiler(response):
     commandArray = wordToArr(response)
     if(commandArray[0].lower() == 'create'):
@@ -115,14 +158,23 @@ def compiler(response):
             if(commandArray[2].lower() == 'directory'):
                 Folder.objects.create(Name = commandArray[3], Type = True)
                 Conversation.objects.create(response = "Done", time = datetime.datetime.now(), sender = "Mac")
-        # elif(commandArray[1].lower() == 'event'):
-            
+        elif(commandArray[1].lower() == 'event'):
+            Event.objects.create(Title = returnName(response), Date = convertDate(returnDate(response)), Notes = "")
+            Conversation.objects.create(response = "Done", time = datetime.datetime.now(), sender = "Mac")
     elif(commandArray[0].lower() == 'execute'):
         safetyProtocols(commandArray[1].lower())
+    elif(commandArray[0].lower() == 'add'):
+        if(commandArray[2].lower() == 'event'):
+            eventName = returnTitle(response)
+            event = Event.objects.get(Title = eventName)
+            note = returnNote(response)
+            event.Notes = note
+            event.save()
+
 
 def checkCommand(response):
     commandArray = wordToArr(response)
-    if(commandArray[0].lower() == 'create' or commandArray[0].lower() == 'execute'):
+    if(commandArray[0].lower() == 'create' or commandArray[0].lower() == 'execute' or commandArray[0].lower() == 'add'):
         return True
     else:
         return False
