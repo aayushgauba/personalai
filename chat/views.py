@@ -13,9 +13,9 @@ def chat(request):
     if request.method == "POST":
         response = request.POST.get("response")
         Conversation.objects.create(response = response, time = datetime.datetime.now(), sender = "Aayush")
-        conversation = Conversation.objects.all().order_by("time")
         conversationarray = wordToArr(response)
         think(conversationarray, response)
+        conversation = Conversation.objects.all().order_by("time")
     return render(request, 'chat.html', context={'conversation':conversation})
 
 
@@ -109,14 +109,20 @@ def quesOrAns(response):
         return True
 
 def convertDate(date):
-    newDate = ""
-    count =len(date)-1
-    while(count>=0):
-        if(date[count] == "/"):
-            newDate += "-"    
+    count =0
+    dateArray = []
+    temp = ""
+    while count < len(date):
+        if date[count] == "/":
+            dateArray.append(temp)
+            temp = ""
+            count+=1
         else:
-            newDate += date[count]
-        count-=1
+            temp+=date[count]
+            count+=1
+    dateArray.append(temp)
+    newDate = dateArray[2]+"-"+dateArray[0]+"-"+dateArray[1]
+
     return newDate
 
 def returnName(response):
@@ -154,13 +160,16 @@ def compiler(response):
         if(commandArray[1].lower() == 'directory'):
             Folder.objects.create(Name = commandArray[2], Type = False)
             Conversation.objects.create(response = "Done", time = datetime.datetime.now(), sender = "Mac")
+            conversation = Conversation.objects.all().order_by("time")
         elif(commandArray[1].lower() == 'secure'):
             if(commandArray[2].lower() == 'directory'):
                 Folder.objects.create(Name = commandArray[3], Type = True)
                 Conversation.objects.create(response = "Done", time = datetime.datetime.now(), sender = "Mac")
+                conversation = Conversation.objects.all().order_by("time")
         elif(commandArray[1].lower() == 'event'):
             Event.objects.create(Title = returnName(response), Date = convertDate(returnDate(response)), Notes = "")
             Conversation.objects.create(response = "Done", time = datetime.datetime.now(), sender = "Mac")
+            conversation = Conversation.objects.all().order_by("time")
     elif(commandArray[0].lower() == 'execute'):
         safetyProtocols(commandArray[1].lower())
     elif(commandArray[0].lower() == 'add'):
@@ -186,12 +195,14 @@ def think(sentenceArray, response):
             if(Phrase.objects.filter(Key = sentenceArray[index]).count() == 1):
                 Conversation.objects.create(response = Phrase.objects.get(Key = sentenceArray[0]).Ans, time = datetime.datetime.now(), sender = "Mac")
                 Conversation.objects.create(response = Phrase.objects.get(Key = sentenceArray[0]).Ques, time = datetime.datetime.now(), sender = "Mac")
+                conversation = Conversation.objects.all().order_by("time")
             elif(Phrase.objects.filter(Key = sentenceArray[index], Ques = rephraseQues(response)).count() != 1 and Phrase.objects.filter(Key = sentenceArray[index], Ques = rephraseQues(response)).count()>0):
                 keyArray = returnKeyIdArray(Phrase.objects.filter(Key = sentenceArray[index]))
                 select = random.choice(keyArray)
                 print(select)
                 Conversation.objects.create(response = Phrase.objects.get(id = select).Ans, time = datetime.datetime.now(), sender = "Mac")
                 Conversation.objects.create(response = Phrase.objects.get(id = select).Ques, time = datetime.datetime.now(), sender = "Mac")
+                Conversation.objects.all().order_by("time")
     elif(index == -1 and checkCommand(response) == False):
         queryArray = querysetToArr(Conversation.objects.all())
         quesOrNot = quesOrAns(queryArray[len(queryArray)-1][0])
