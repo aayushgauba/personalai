@@ -1,6 +1,7 @@
 from datetime import datetime
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from .models import Event
+from .forms import EditForm
 import datetime
 # Create your views here.
 def events(request):
@@ -37,6 +38,19 @@ def getDictFromDayAndWeek(calender, day, week):
             temp = item
     return temp
 
+def querysetArray(array):
+    queryArray =[]
+    for item in array:
+        event = Event.objects.get(id = item)
+        print
+        temp = {}
+        temp["id"] = event.id
+        temp["Title"] = event.Title
+        temp["Date"] = event.Date
+        temp["Notes"] = event.Notes
+        queryArray.append(temp)
+    return queryArray
+
 def event(request, day, week):
     calenderArray = calender()
     dict = getDictFromDayAndWeek(calenderArray, day, week)
@@ -44,14 +58,61 @@ def event(request, day, week):
     calenderArray = eventArray(calenderArray, month)
     year = dict["year"]
     day = dict["day"]
-    print(day)
+    calenderArray = querysetArray(dict["list"])
     context = {
+        'week':week,
         'day':day,
         'year':year,
         'month':month,
         'calender':calenderArray,
     }    
     return render(request, "event.html", context)
+
+def returnDateEvent(origDate):
+    year = origDate[0]+origDate[1]+origDate[2]+origDate[3]
+    date = ""
+    month = ""
+
+    if(origDate[4] == "-" and origDate[7] == "-"):
+        date = origDate[5]+origDate[6]
+    elif(origDate[4] == "-" and origDate[6] == "-"):
+        date = origDate[5]
+    if(len(origDate)-1 == 8):
+        month = origDate[8]
+    elif(len(origDate)-1 == 9):
+        month = origDate[8]+ origDate[9]
+    totalDate = year + "-" + date + "-" + month
+    return totalDate
+
+def eventEdit(request, day, week, event_id):
+    event = Event.objects.get(id = event_id)
+    form = EditForm({'Title':event.Title, 'Date':event.Date, 'Notes':event.Notes})
+    if request.method == "POST":
+        date = returnDateEvent(str(request.POST.get("Date")))
+        print(date)
+        title = request.POST.get("Title")
+        notes = request.POST.get("Notes")
+        event.Date = date
+        event.Title = title
+        event.Notes = notes
+        event.save()
+        return redirect("events")
+    return render(request, "eventEdit.html", context = {'form':form})
+
+def eventDelete(request, event_id):
+    event = Event.objects.get(id = event_id)
+    event.delete()
+    return redirect("events")
+
+def eventItem(request, day, week, event_id):
+
+    event = Event.objects.get(id = event_id)
+    context = {
+        'day':day,
+        'week':week,
+        'event':event
+    }
+    return render(request, "eventView.html", context)
 
 def monthName(month):
     if month == 1:
@@ -108,10 +169,12 @@ def monthString(month):
 
 def eventArray(arrayofDict, month):
     events = Event.objects.all()
+    print(events)
     for event in events:
         if(getYearFromDate(str(event.Date)) == getYear()):
             for item in arrayofDict:
                 if(int(getMonth(event.Date)) == int(monthString(month))):
+                    print(int(getDayFromDate(event.Date)))
                     if(int(getDayFromDate(event.Date)) == int(item["day"])):
                         item["list"].append(event.id)
                         item["event"] = True
@@ -248,10 +311,10 @@ def setNextDays(array, elem):
 def getDayFromDate(date):
     date = str(date)
     if(len(date) == 10):
-        day = date[5]+date[6]
+        day = date[8]+date[9]
         return day
     elif(len(date) == 9):
-        day = date[5]
+        day = date[8]
         return day
 
 def getYearFromDate(date):
@@ -275,5 +338,4 @@ def calender():
     year = getYearFromDate(date)
     monthDictArray = createDict(monthArray, year, month)
     monthDictArray[currElem]['isCurrent'] = True
-    print(monthDictArray)
     return monthDictArray

@@ -1,3 +1,4 @@
+{%load crispy_forms_tags %} 
 <html lang="en"><head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -162,14 +163,6 @@
   
   <main>
   <style>
-    div {
-        width: 320px;
-        padding: 10px;
-        margin: 0;
-        background-color:lightgreen;
-      }
-  </style>
-  <style>
       * {box-sizing: border-box;}
       ul {list-style-type: none;}
       body {font-family: Verdana, sans-serif;}
@@ -268,22 +261,16 @@
       }
       </style>
       <br>
-      <center><h1>Events for {{day}} {{month}}, {{year}}</h1></center>
-      <table>
-        <tr>
-          <th><center>Title:</center></th>
-          <th></th>
-        </tr>
-        {% if calender %}
-        {%for event in calender%}
-        <tr>
-          <td><center>{{event.Title}}</center></td>
-          <td><a class="btn btn-primary" href="{% url 'eventItem' day week event.id %}">View</a></td>
-        </tr>
-        {%endfor%}
-        {%endif%}
-
-      </table>
+      <center>
+      <div class = "col-md-7">
+        <form method="post">
+          {%csrf_token%}
+        {{form|crispy}}
+        <br>
+        <input type="submit" class = "btn btn-primary"/>
+      </form>
+      </div></center>
+        
   </ul>
   </main>
   </body>

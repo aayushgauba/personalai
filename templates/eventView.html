@@ -268,22 +268,11 @@
       }
       </style>
       <br>
-      <center><h1>Events for {{day}} {{month}}, {{year}}</h1></center>
-      <table>
-        <tr>
-          <th><center>Title:</center></th>
-          <th></th>
-        </tr>
-        {% if calender %}
-        {%for event in calender%}
-        <tr>
-          <td><center>{{event.Title}}</center></td>
-          <td><a class="btn btn-primary" href="{% url 'eventItem' day week event.id %}">View</a></td>
-        </tr>
-        {%endfor%}
-        {%endif%}
-
-      </table>
+      {%if event%}
+      <center><h1>Event Title: {{event.Title}}</h1></center>
+    <center><p>{{event.Notes}}</p></center>
+    <center><p><a class="btn btn-danger" href="{% url 'eventDelete' event.id %}">Delete</a>  <a class="btn btn-primary" href="{% url 'eventEdit' day week event.id %}">Edit</a></p></center>      
+      {%endif%}
   </ul>
   </main>
   </body>
