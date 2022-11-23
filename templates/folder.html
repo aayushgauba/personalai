@@ -182,13 +182,23 @@
     </style>
     </head>
     <body>
-    
-    <center><h2>{{folder.Name}}</h2></center>
-    
+    <table>
+      <tr>
+    <center><p><h2>{{folder.Name}}</h2></tr><tr>     <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+      Dropdown button
+    </button>
+    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+      <li><a class="dropdown-item" href="#">Action</a></li>
+      <li><a class="dropdown-item" href="#">Another action</a></li>
+      <li><a class="dropdown-item" href="#">Something else here</a></li>
+    </ul></tr></p></center>
+  </table>
     <table>
       <tr>
         <th>Name:</th>
         <th>Type:</th>
+        <th></th>
+        <th></th>
         <th></th>
       </tr>
       {%if textfiles or externalfiles%}
@@ -198,6 +208,29 @@
         <td>Text
         </td>
         <td><a href = "{% url 'textview' folder.id textfile.id %}" class = "btn btn-primary">View</a></td>
+        <td><a href = "{% url 'textFileEdit' folder.id textfile.id %}" class = "btn btn-primary">Edit</a></td>
+        <td><button type="button" class="btn btn-danger"  data-bs-toggle="modal" data-bs-target=#{{textfile.Name}}>Delete</button></td>
+        <!-- Modal -->
+<div class="modal fade" id={{textfile.Name}} tabindex="-1" aria-labelledby="{{textfile.Name}}" aria-hidden="true">
+<div class="modal-dialog">
+<div class="modal-content">
+  <div class="modal-header">
+    <h5 class="modal-title" id="exampleModalLabel">Are you sure?</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+  </div>
+  <div class="modal-body">
+    Are you sure that you want to delete.      </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+    <form action = "{%url 'textFileDelete' folder.id textfile.id%}" method ="post">
+      {%csrf_token%}
+      <button type="submit" class="btn btn-danger">Delete</button>
+    </form>
+    
+  </div>
+</div>
+</div>
+</div>
       </tr>
       {%endfor%}
       {%for externalfile in externalfiles%}
@@ -205,6 +238,29 @@
         <td>{{externalfile.Name}}</td>
         <td>ExternalFile
         </td>
+        <td><a href = "{% url 'externalFileView' folder.id externalfile.id %}" class = "btn btn-primary">View</a></td>
+        <td><button type="button" class="btn btn-danger"  data-bs-toggle="modal" data-bs-target=#{{externalfile.Name}}>Delete</button></td>
+            <!-- Modal -->
+<div class="modal fade" id={{externalfile.Name}} tabindex="-1" aria-labelledby="{{externalfile.Name}}" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Are you sure?</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure that you want to delete.      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <form action = "{%url 'externalFileDelete' folder.id externalfile.id%}" method ="post">
+          {%csrf_token%}
+          <button type="submit" class="btn btn-danger">Delete</button>
+        </form>
+        
+      </div>
+    </div>
+  </div>
+</div>
       </tr>
       {%endfor%}
       
