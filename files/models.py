@@ -13,6 +13,6 @@ class TextFile(models.Model):
 
 class ExternalFile(models.Model):
     Name = models.CharField(max_length = 20)
-    upload = models.FileField(upload_to = 'files', blank = False)
-    FolderName = models.ForeignKey(Folder, on_delete = models.CASCADE)
-    FileType = models.CharField(max_length = 20)
+    upload = models.ImageField(upload_to = 'file', blank = False)
+    FolderName = models.CharField(max_length = 1000)
+    FileType = models.CharField(choices=(("Document", "Document"), ("Image", "Image"), ("Audio", "Audio")), max_length=100)
