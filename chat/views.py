@@ -8,30 +8,29 @@ from files.models import Folder
 from events.models import Event
 import datetime
 import random
+import requests
+import json
 from events.views import getDayFromDate, getDay, calender, getDate
 # Create your views here.
+from serpapi import GoogleSearch
+import socket
+from ipstack import GeoLookup
+
 
 def responseDay():
     date = getDate()
     events = Event.objects.all().filter(Date = str(str(date[0])+"-"+str(date[1])+"-"+str(date[2])))
     day = str(datetime.datetime.now())[8]+str(datetime.datetime.now())[9]
     response = ""
-    # print(calenderArray)
-    # for item in calenderArray:
-    #     if(str(item["day"])):
-    #         print(item)
-    #         print(len(item["list"]))
-    #         if(len(item["list"]) > 0):
-    #             response = "You have " + len(item["list"]) + "events in your schedule"
     if(events.count()==1):
-        response = " You have " + str(events.count()) + " event in your schedule"
+        response = " You have " + str(events.count()) + " event in your schedule. You can check them on the events tab on the website"
     elif(events.count()>1):
-        response = " You have " + str(events.count()) + " events in your schedule"
+        response = " You have " + str(events.count()) + " events in your schedule. . You can check them on the events tab on the website"
     return response
 
 
 def chat(request):
-    getWeather("maryland heights")
+    getWeather(get_location(getIP())["city"])
     conversation = Conversation.objects.all().order_by("time")
     if request.method == "POST":
         response = request.POST.get("response")
@@ -51,7 +50,6 @@ def ArrtoWord(array):
     
     for item in array:
         word+=item.lower()
-    print(word)
     return word
 
 def safetyProtocols(protocol):
@@ -99,6 +97,7 @@ def findKeyWordPos(sentenceArray):
     for item in sentenceArray:
         for obj in queryArray:
             if(item.lower() == obj.lower()):
+                
                 index = sentenceArray.index(item)
     return index
 
@@ -177,9 +176,23 @@ def returnNote(response):
         name = ArrtoWord(nameArray)
         return name    
 
+def getIP():
+    response = requests.get('https://api64.ipify.org?format=json').json()
+    return response["ip"]
+
+def get_location(ip_address):
+    response = requests.get(f'https://ipapi.co/{ip_address}/json/').json()
+    location_data = {
+        "ip": ip_address,
+        "city": response.get("city"),
+        "region": response.get("region"),
+        "country": response.get("country_name")
+    }
+    return location_data
+
+
 def farenheitToCelcius(temp):
     tempWord = ""
-    print(temp)
     if(len(temp) == 4):
         tempWord = temp[0]+temp[1]
     elif(len(temp) == 3):
@@ -198,28 +211,27 @@ def tempAnalysis(temp):
     elif(temp > 15):
         return "I reccommend that you wear a half Tshirt."
 
-def getWeather(city):    
-    # creating url and requests instance
+def returnSearchQuery(response):
+    print(response)
+    queryArray = wordToArr(response)
+    del queryArray[0]
+    query = ArrtoWord(queryArray)
+    return query
+
+def getWeather(city):
+    if(city == None):
+        city = "Maryland Heights"    
     url = "https://www.google.com/search?q="+"weather"+city
     html = requests.get(url).content
-    
-    # getting raw data
     soup = BeautifulSoup(html, 'html.parser')
     temp = soup.find('div', attrs={'class': 'BNeawe iBp4i AP7Wnd'}).text
-    # print(temp)
     temp = farenheitToCelcius(temp)
-    print(temp)
     str = soup.find('div', attrs={'class': 'BNeawe tAd8D AP7Wnd'}).text
-    # formatting data
     data = str.split('\n')
     time = data[0]
     sky = data[1]
-    
-    # getting all div tag
     listdiv = soup.findAll('div', attrs={'class': 'BNeawe s3v9rd AP7Wnd'})
     strd = listdiv[5].text
-    
-    # getting other required data
     pos = strd.find('Wind')
     other_data = strd[pos:]
     dict = {}
@@ -227,7 +239,6 @@ def getWeather(city):
     dict["Time"] = time
     dict["Sky"] = sky
     dict["otherdata"] = other_data
-    # printing all data
     return dict
 
 def compiler(response):
@@ -255,11 +266,24 @@ def compiler(response):
             note = returnNote(response)
             event.Notes = note
             event.save()
+    elif(commandArray[0].lower() == "search"):        
+        try:
+            from googlesearch import search
+        except ImportError:
+            print("No module named 'google' found")
+        # to search
+        query = returnSearchQuery(response)
+        print(query)
+        Conversation.objects.create(response = "I found this on the web", time = datetime.datetime.now(), sender = "Mac")
+        for j in search(query, tld="com", num=10, stop=10, pause=2):
+            Conversation.objects.create(response = j, time = datetime.datetime.now(), sender = "Mac")
+        Conversation.objects.all().order_by("time")
+        print(get_location(getIP()))
 
 
 def checkCommand(response):
     commandArray = wordToArr(response)
-    if(commandArray[0].lower() == 'create' or commandArray[0].lower() == 'execute' or commandArray[0].lower() == 'add'):
+    if(commandArray[0].lower() == 'create' or commandArray[0].lower() == 'search' or commandArray[0].lower() == 'execute' or commandArray[0].lower() == 'add'):
         return True
     else:
         return False
@@ -275,10 +299,8 @@ def getTime(time):
     current_Time = int(now.strftime("%H"))
     current_Time = current_Time - time
     if(current_Time < 0):
-        current_Time + 24
+        current_Time += 24
     return current_Time    
-
-
 
 def think(sentenceArray, response):
     index = findKeyWordPos(sentenceArray)
@@ -291,7 +313,6 @@ def think(sentenceArray, response):
             elif(Phrase.objects.filter(Key = sentenceArray[index], Ques = rephraseQues(response)).count() != 1 and Phrase.objects.filter(Key = sentenceArray[index], Ques = rephraseQues(response)).count()>0):
                 keyArray = returnKeyIdArray(Phrase.objects.filter(Key = sentenceArray[index]))
                 select = random.choice(keyArray)
-                print(select)
                 Conversation.objects.create(response = Phrase.objects.get(id = select).Ans, time = datetime.datetime.now(), sender = "Mac")
                 Conversation.objects.create(response = Phrase.objects.get(id = select).Ques, time = datetime.datetime.now(), sender = "Mac")
                 Conversation.objects.all().order_by("time")
@@ -309,7 +330,7 @@ def think(sentenceArray, response):
         eventString = responseDay()
         if(sentenceArray[1].lower() == "morning"):
             time = getTime(6)
-            dict = getWeather("maryland heights")
+            dict = getWeather(get_location(getIP())["city"])
             temp = dict["Temperature"]
             feel = getTemp(int(temp))
             suggestion = tempAnalysis(temp)         
@@ -327,7 +348,7 @@ def think(sentenceArray, response):
                 Conversation.objects.all().order_by("time")
         elif(sentenceArray[1].lower() == "afternoon"):
             time = getTime(6)
-            dict = getWeather("maryland heights")
+            dict = getWeather(get_location(getIP())["city"])
             temp = dict["Temperature"]
             feel = getTemp(int(temp))
             suggestion = tempAnalysis(temp)
@@ -345,7 +366,7 @@ def think(sentenceArray, response):
                 Conversation.objects.all().order_by("time")
         elif(sentenceArray[1].lower() == "afternoon"):
             time = getTime(6)
-            dict = getWeather("maryland heights")
+            dict = getWeather(get_location(getIP())["city"])
             temp = dict["Temperature"]
             feel = getTemp(int(temp))
             suggestion = tempAnalysis(temp)
@@ -354,10 +375,10 @@ def think(sentenceArray, response):
                 Conversation.objects.create(response = newResponse, time = datetime.datetime.now(), sender = "Mac")
                 Conversation.objects.all().order_by("time")
             elif(time >=12 and time <5):
-                newResponse = response+ " Boss! Good Afternoon. I hope the  rest of your day goes good for you. I hope you get a good sleep. The weather will be "+feel+". "+suggestion+eventString
+                newResponse = response+ " Boss! Good Afternoon. I hope the rest of your day goes good for you. I hope you get a good sleep. The weather will be "+feel+". "+suggestion+eventString
                 Conversation.objects.create(response = newResponse, time = datetime.datetime.now(), sender = "Mac")
                 Conversation.objects.all().order_by("time")
             elif(time >=5):
                 newResponse = response+ " Boss! Its more like Good Night. Looks like your day started late. I hope the  rest of your day goes good for you. The weather will be "+feel+". "+suggestion+eventString
                 Conversation.objects.create(response = newResponse, time = datetime.datetime.now(), sender = "Mac")
-                Conversation.objects.all().order_by("time")                    
+                Conversation.objects.all().order_by("time")

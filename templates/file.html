@@ -187,7 +187,16 @@
     
     <center><p><h2>{{externalfile.Name}}</h2> </p></center>
     <center>
+      {%if externalfile.FileType == "Image"%}
     <img src="{{externalfile.upload.url}}">
+    {%endif%}
+    {%if externalfile.FileType == "Audio"%}
+    <audio controls>
+      <source src="{{externalfile.upload.url}}" type="audio/mpeg">
+      Your browser does not support the audio element.
+    </audio>
+    {%endif%}
+
 </center>
     
 </body>

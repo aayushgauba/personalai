@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from .models import Folder, TextFile, ExternalFile
 from .forms import TextFileForm, ExternalFileForm
 import os
-# Create your views here.
+
 def folders(request):
     files = Folder.objects.all()
     return render(request, "folders.html", context = {"folders":files})
@@ -10,12 +10,19 @@ def folders(request):
 def folder(request, folder_id):
     folder = Folder.objects.get(id = folder_id)
     textfiles = TextFile.objects.filter(FolderName = folder_id)
-    externalfiles = ExternalFile.objects.filter(FolderName = folder_id)
-    return render(request, "folder.html", context={"textfiles":textfiles, "externalfiles":externalfiles, "folder":folder})
+    imagefiles = ExternalFile.objects.filter(FolderName = folder_id, FileType = "Image")
+    audiofiles = ExternalFile.objects.filter(FolderName = folder_id, FileType = "Audio")
+    return render(request, "folder.html", context={"textfiles":textfiles, "imagefiles":imagefiles,"audiofiles":audiofiles, "folder":folder})
 
 def textView(request, folder_id, file_id):
     textfile = TextFile.objects.get(id = file_id)
     return render(request, "fileview.html", context = {"textfile":textfile})
+
+def portfolio(request, folder_id):
+    folder = Folder.objects.get(id = folder_id)
+    textfiles = TextFile.objects.filter(FolderName = folder_id)
+    externalfiles = ExternalFile.objects.filter(FolderName = folder_id)
+    return render(request, "portfolio.html", context={"textfiles":textfiles, "externalfiles":externalfiles, "folder":folder})
 
 def filecreate(request, folder_id):
     folder = Folder.objects.get(id = folder_id)
@@ -43,7 +50,7 @@ def fileUpload(request, folder_id):
     context = {
             'form':form,
         }
-    return render(request, 'fileUpload.html', context)
+    return render(request, 'fileUpload.html', context)    
 
 def textFileEdit(request, folder_id, file_id):
     folder = Folder.objects.get(id = folder_id)
@@ -82,4 +89,9 @@ def externalFileView(request, folder_id, file_id):
     externalfile = ExternalFile.objects.get(id = file_id)
     return render(request, "file.html", context = {"externalfile":externalfile})
     
-
+def portfolio(request, folder_id):
+    folder = Folder.objects.get(id = folder_id)
+    textfiles = TextFile.objects.filter(FolderName = folder_id)
+    imagefiles = ExternalFile.objects.filter(FolderName = folder_id, FileType = "Image")
+    audiofiles = ExternalFile.objects.filter(FolderName = folder_id, FileType = "Audio")
+    return render(request, "portfolio.html", context={"textfiles":textfiles, "imagefiles":imagefiles,"audiofiles":audiofiles, "folder":folder})
