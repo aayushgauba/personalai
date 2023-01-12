@@ -12,4 +12,5 @@ urlpatterns = [
     path('<int:folder_id>/view/file/<int:file_id>', views.externalFileView, name = 'externalFileView'),
     path('<int:folder_id>/delete/image/<int:file_id>', views.externalFileDelete, name = 'externalFileDelete'),
     path('<int:folder_id>/delete/text/<int:file_id>', views.textFileDelete, name = 'textFileDelete'),
+    path('<int:folder_id>/portfolio', views.portfolio, name = 'portfolio'),
 ]

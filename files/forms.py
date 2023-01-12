@@ -9,5 +9,6 @@ class ExternalFileForm(forms.ModelForm):
     class Meta:
         model = ExternalFile
         fields = "__all__"
-        widgets = {'FolderName':forms.HiddenInput()}
+        widgets = {'FolderName':forms.HiddenInput(),
+                    'Note':forms.Textarea()}
 

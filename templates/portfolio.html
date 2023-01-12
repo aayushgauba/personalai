@@ -1,3 +1,5 @@
+
+{%block content%}
 <html lang="en"><head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -160,9 +162,6 @@
   </nav>
 </header>
 <main>
-    <!DOCTYPE html>
-    <html>
-    <head>
     <style>
     table {
       font-family: arial, sans-serif;
@@ -179,89 +178,32 @@
     tr:nth-child(even) {
       background-color: #dddddd;
     }
-    .flex { display : flex;
-      justify-content: center;
-    }
     </style>
     </head>
     <body>
-    <center><div class = "flex"><h2>{{folder.Name}}</h2>     <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-      Create
-    </button>
-    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-      <li><a class="dropdown-item" href="{% url 'create' folder.id %}">Text File</a></li>
-      <li><a class="dropdown-item" href="{% url 'fileUpload' folder.id %}">External File</a></li>
-    </ul></div></center>
-    <table>
-      <tr>
-        <th>Name:</th>
-        <th>Type:</th>
-        <th></th>
-        <th></th>
-        <th></th>
-      </tr>
-      {%if textfiles or externalfiles%}
-      {%for textfile in textfiles%}
-      <tr>
-        <td>{{textfile.Name}}</td>
-        <td>Text
-        </td>
-        <td><a href = "{% url 'textview' folder.id textfile.id %}" class = "btn btn-primary">View</a></td>
-        <td><a href = "{% url 'textFileEdit' folder.id textfile.id %}" class = "btn btn-primary">Edit</a></td>
-        <td><button type="button" class="btn btn-danger"  data-bs-toggle="modal" data-bs-target=#{{textfile.Name}}>Delete</button></td>
-        <!-- Modal -->
-<div class="modal fade" id={{textfile.Name}} tabindex="-1" aria-labelledby="{{textfile.Name}}" aria-hidden="true">
-<div class="modal-dialog">
-<div class="modal-content">
-  <div class="modal-header">
-    <h5 class="modal-title" id="exampleModalLabel">Are you sure?</h5>
-    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-  </div>
-  <div class="modal-body">
-    Are you sure that you want to delete.      </div>
-  <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-    <form action = "{%url 'textFileDelete' folder.id textfile.id%}" method ="post">
-      {%csrf_token%}
-      <button type="submit" class="btn btn-danger">Delete</button>
-    </form>
     
-  </div>
-</div>
-</div>
-</div>
-      </tr>
-      {%endfor%}
-      {%for externalfile in externalfiles%}
-      <tr>
-        <td>{{externalfile.Name}}</td>
-        <td>{{externalfile.FileType}}
-        </td>
-        <td><a href = "{% url 'externalFileView' folder.id externalfile.id %}" class = "btn btn-primary">View</a></td>
-        <td><button type="button" class="btn btn-danger"  data-bs-toggle="modal" data-bs-target=#{{externalfile.Name}}>Delete</button></td>
-            <!-- Modal -->
-<div class="modal fade" id={{externalfile.Name}} tabindex="-1" aria-labelledby="{{externalfile.Name}}" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Are you sure?</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        Are you sure that you want to delete.      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <form action = "{%url 'externalFileDelete' folder.id externalfile.id%}" method ="post">
-          {%csrf_token%}
-          <button type="submit" class="btn btn-danger">Delete</button>
-        </form>
-        
-      </div>
-    </div>
-  </div>
-</div>
-      </tr>
-      {%endfor%}
-      
-      {%endif%}
-    </table>
+    <center><p><h2>Portfolio: {{folder.Name}}</h2> </p></center>
+    {% if imagefiles %}
+    <center><p><h3>Image</h3>
+        {%for imagefile in imagefiles%}
+        <img src="{{imagefile.upload.url}}">
+        <p>{{imagefile.Notes}}</p>
+      </center>
+        {%endfor%}
+    {%endif%}
+    {% if audiofiles %}
+    <center><p><h3>Audio Files</h3></center>
+        {%for audiofile in audiofiles%}
+        <center>
+          <audio controls>
+            <source src="{{audiofile.upload.url}}" type="audio/mpeg">
+            Your browser does not support the audio element.
+          </audio>
+          <p>{{audiofile.Notes}}</p>
+        </center>        
+        {%endfor%}
+    {%endif%}
+    
+</body>
+</html>
+{%endblock%}
